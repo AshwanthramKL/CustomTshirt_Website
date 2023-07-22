@@ -15,7 +15,7 @@ const Home = () => {
   return (
     // Enables animations of objects
     <AnimatePresence>
-      {snap.intro && ( // uif intro page then display motion section home
+      {snap.intro && ( // if intro page then display motion section home
         /* threejs logo slides from left */
         <motion.section className="home" {...slideAnimation("left")}>
           <motion.header {...slideAnimation("down")}>
