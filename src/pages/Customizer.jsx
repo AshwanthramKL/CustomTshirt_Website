@@ -38,12 +38,30 @@ const Customizer = () => {
       case "filepicker":
         return <FilePicker file={file} setFile={setFile} readFile={readFile} />;
       case "aipicker":
-        return <AIPicker />;
+        return (
+          <AIPicker
+            prompt={prompt}
+            setPrompt={setPrompt}
+            handleSubmit={handleSubmit}
+          />
+        );
       default:
         return null;
     }
   };
 
+  const handleSubmit = () => {
+    try {
+      if (!prompt) alert("Please enter a prompt");
+      //  Call backend to generate image/logo
+      
+    } catch (error) {
+      alert(error);
+    } finally {
+      setGeneratingImg(false);
+      setActiveEditorTab("");
+    }
+  };
   const handleDecals = (type, result) => {
     const decalType = DecalTypes[type]; // Either logo or full texture
     state[decalType.stateProperty] = result;
