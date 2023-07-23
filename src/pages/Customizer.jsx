@@ -42,6 +42,7 @@ const Customizer = () => {
           <AIPicker
             prompt={prompt}
             setPrompt={setPrompt}
+            generatingImg={generatingImg}
             handleSubmit={handleSubmit}
           />
         );
