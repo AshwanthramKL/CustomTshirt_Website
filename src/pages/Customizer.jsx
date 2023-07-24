@@ -9,13 +9,12 @@ import { downloadCanvasToImage, reader } from "../config/helpers";
 import { EditorTabs, FilterTabs, DecalTypes } from "../config/constants";
 import { fadeAnimation, slideAnimation } from "../config/motion";
 import {
-  CustomButton,
   AIPicker,
   ColorPicker,
+  CustomButton,
   FilePicker,
   Tab,
 } from "../components";
-import { Color } from "three";
 
 const Customizer = () => {
   const snap = useSnapshot(state);
@@ -27,10 +26,11 @@ const Customizer = () => {
 
   const [activeEditorTab, setActiveEditorTab] = useState("");
   const [activeFilterTab, setActiveFilterTab] = useState({
-    logoTshirt: true,
+    logoShirt: true,
     stylishShirt: false,
   });
 
+  // show tab content depending on the activeTab
   const generateTabContent = () => {
     switch (activeEditorTab) {
       case "colorpicker":
@@ -51,11 +51,34 @@ const Customizer = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async (type) => {
+    if (!prompt) return alert("Please enter a prompt");
+
     try {
-      if (!prompt) alert("Please enter a prompt");
-      //  Call backend to generate image/logo
-      
+      setGeneratingImg(true);
+
+      console.log(
+        JSON.stringify({
+          prompt: prompt,
+        })
+      );
+      const response = await fetch("http://localhost:8080/api/v1/dalle", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: prompt,
+        }),
+      });
+      console.log("waiting for data");
+
+      const data = await response.json();
+
+      console.log("Data received");
+
+      console.log(data);
+      handleDecals(type, `data:image/png;base64,${data.photo}`);
     } catch (error) {
       alert(error);
     } finally {
@@ -63,8 +86,10 @@ const Customizer = () => {
       setActiveEditorTab("");
     }
   };
+
   const handleDecals = (type, result) => {
-    const decalType = DecalTypes[type]; // Either logo or full texture
+    const decalType = DecalTypes[type];
+
     state[decalType.stateProperty] = result;
 
     if (!activeFilterTab[decalType.filterTab]) {
@@ -79,17 +104,19 @@ const Customizer = () => {
         break;
       case "stylishShirt":
         state.isFullTexture = !activeFilterTab[tabName];
+        break;
       default:
         state.isLogoTexture = true;
         state.isFullTexture = false;
+        break;
     }
 
     // after setting the state, activeFilterTab is updated
 
-    setActiveFilterTab((prev) => {
+    setActiveFilterTab((prevState) => {
       return {
-        ...prev,
-        [tabName]: !prev[tabName],
+        ...prevState,
+        [tabName]: !prevState[tabName],
       };
     });
   };
@@ -105,7 +132,6 @@ const Customizer = () => {
     <AnimatePresence>
       {!snap.intro && (
         <>
-          {/* left tab console - Editor Tabs */}
           <motion.div
             key="custom"
             className="absolute top-0 left-0 z-10"
@@ -126,22 +152,18 @@ const Customizer = () => {
             </div>
           </motion.div>
 
-          {/* Go back button */}
           <motion.div
-            className="absolute top-5 right-5  z-10"
+            className="absolute z-10 top-5 right-5"
             {...fadeAnimation}
           >
             <CustomButton
               type="filled"
               title="Go Back"
+              handleClick={() => (state.intro = true)}
               customStyles="w-fit px-4 py-2.5 font-bold text-sm"
-              handleClick={() => {
-                state.intro = true;
-              }}
             />
           </motion.div>
 
-          {/* Bottom console - filter tabs */}
           <motion.div
             className="filtertabs-container"
             {...slideAnimation("up")}
@@ -152,9 +174,7 @@ const Customizer = () => {
                 tab={tab}
                 isFilterTab
                 isActiveTab={activeFilterTab[tab.name]}
-                handleClick={() => {
-                  handleActiveFilterTab(tab.name);
-                }}
+                handleClick={() => handleActiveFilterTab(tab.name)}
               />
             ))}
           </motion.div>
